@@ -1,0 +1,56 @@
+trigger: none
+pr: none
+parameters:
+  - name: pool
+    type: object
+    default: {name: platform-local}
+pool: ${{ parameters.pool }}
+variables:
+  - template: templates/azure-env.yml
+lockBehavior: sequential
+stages:
+  - stage: VerifyDev
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['Build.Reason'], 'Manual'))
+    jobs:
+      - job: Test
+        steps:
+          - checkout: self
+          - template: templates/tools.yml
+          - bash: |
+              set -euo pipefail
+              git -c http.extraheader="AUTHORIZATION: bearer $SYSTEM_ACCESSTOKEN" clone --branch main "$GITOPS_URL" out/gitops
+              python scripts/gitops_update.py snapshot --repo out/gitops --output out/dev-release.json
+              python scripts/gitops_update.py release-args out/dev-release.json > out/release-args.txt
+              mapfile -t release < out/release-args.txt
+              EXPECTED_IMAGE="${release[0]}@${release[1]}" EXPECTED_VERSION="${release[2]}" bash scripts/verify-gitops.sh dev
+            env:
+              KUBE_CONTEXT: $(KubeContext)
+              APPROVED_AKS_CONTEXT: $(KubeContext)
+              GITOPS_URL: $(GitopsUrl)
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+          - publish: out/dev-release.json
+            artifact: tested-dev-release
+  - stage: Promote
+    dependsOn: VerifyDev
+    jobs:
+      - deployment: StageReleasePR
+        environment: stage-promotion
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - template: templates/tools.yml
+                - download: current
+                  artifact: tested-dev-release
+                - bash: |
+                    set -euo pipefail
+                    python scripts/gitops_update.py release-args "$(Pipeline.Workspace)/tested-dev-release/dev-release.json" > out-release.txt
+                    mapfile -t release < out-release.txt
+                    bash scripts/gitops-pr.sh stage "${release[0]}" "${release[1]}" "${release[2]}"
+                    EXPECTED_IMAGE="${release[0]}@${release[1]}" EXPECTED_VERSION="${release[2]}" bash scripts/verify-gitops.sh stage
+                  env:
+                    GITOPS_URL: $(GitopsUrl)
+                    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+                    KUBE_CONTEXT: $(KubeContext)
+                    APPROVED_AKS_CONTEXT: $(KubeContext)

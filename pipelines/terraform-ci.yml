@@ -1,0 +1,67 @@
+# Azure Repos: configure this as required PR build-validation branch policy.
+# Azure Repos does not implement YAML pr triggers.
+trigger:
+  branches: {include: [main]}
+pr: none
+parameters:
+  - name: azurePlan
+    type: boolean
+    default: false
+  - name: pool
+    type: object
+    default: {vmImage: ubuntu-24.04}
+pool: ${{ parameters.pool }}
+variables:
+  - ${{ if eq(parameters.azurePlan, true) }}:
+    - template: templates/azure-env.yml
+stages:
+  - stage: Validate
+    jobs:
+      - job: Static
+        steps:
+          - checkout: self
+            persistCredentials: false
+          - template: templates/tools.yml
+          - bash: bash scripts/validate.sh
+            displayName: Format, schema, mock tests, lint and security gates
+  - ${{ if eq(parameters.azurePlan, true) }}:
+    - stage: AzurePlan
+      dependsOn: Validate
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['Build.Reason'], 'Manual'))
+      jobs:
+        - job: Plan
+          steps:
+            - checkout: self
+              persistCredentials: false
+            - template: templates/tools.yml
+            - task: AzureCLI@2
+              inputs:
+                azureSubscription: platform-plan
+                addSpnToEnvironment: true
+                scriptType: bash
+                scriptLocation: inlineScript
+                inlineScript: |
+                  set -euo pipefail
+                  source scripts/oidc-env.sh
+                  bash scripts/terraform-plan.sh "$(Build.ArtifactStagingDirectory)/approved-plan"
+              env:
+                SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+                SYSTEM_OIDCREQUESTURI: $(System.OidcRequestUri)
+                SERVICE_CONNECTION_ID: $(PlanServiceConnectionId)
+                STATE_RESOURCE_GROUP: $(StateResourceGroup)
+                STATE_ACCOUNT: $(StateAccount)
+                STATE_CONTAINER: $(STATE_CONTAINER)
+                STATE_KEY: $(STATE_KEY)
+                TF_VAR_tenant_id: $(TenantId)
+                TF_VAR_resource_group_name: $(PlatformResourceGroup)
+                TF_VAR_unique_suffix: $(UniqueSuffix)
+                TF_VAR_kubernetes_version: $(AksVersion)
+                TF_VAR_authorized_ip_ranges: $(ApiCidrsJson)
+                TF_VAR_admin_group_object_ids: $(AdminGroupsJson)
+                TF_VAR_budget_emails: $(BudgetEmailsJson)
+                TF_VAR_budget_start_date: $(BudgetStartDate)
+                TF_VAR_enable_acr: $(EnableAcr)
+                TF_VAR_enable_monitoring: $(EnableMonitoring)
+                TF_VAR_app_pipeline_principal_id: $(AppPipelinePrincipalId)
+            - publish: $(Build.ArtifactStagingDirectory)/approved-plan
+              artifact: approved-plan

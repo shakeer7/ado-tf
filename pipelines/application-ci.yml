@@ -1,0 +1,72 @@
+trigger:
+  branches: {include: [main]}
+  paths: {include: [application, helm/sample-application]}
+pr: none
+parameters:
+  - name: publishAzure
+    type: boolean
+    default: false
+  - name: pool
+    type: object
+    default: {vmImage: ubuntu-24.04}
+pool: ${{ parameters.pool }}
+variables:
+  - ${{ if eq(parameters.publishAzure, true) }}:
+    - template: templates/azure-env.yml
+stages:
+  - stage: TestBuildScan
+    jobs:
+      - job: Build
+        steps:
+          - checkout: self
+            persistCredentials: false
+          - template: templates/tools.yml
+          - bash: |
+              set -euo pipefail
+              python -m pytest application/tests
+              trivy fs --scanners vuln,secret --severity HIGH,CRITICAL --exit-code 1 application
+              docker build -t platform-sample:$(Build.SourceVersion) application
+              trivy image --severity HIGH,CRITICAL --exit-code 1 platform-sample:$(Build.SourceVersion)
+              mkdir -p out
+              docker save platform-sample:$(Build.SourceVersion) -o out/image.tar
+          - publish: out
+            artifact: tested-image
+  - ${{ if eq(parameters.publishAzure, true) }}:
+    - stage: PublishAndReleasePR
+      dependsOn: TestBuildScan
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['Build.Reason'], 'Manual'))
+      jobs:
+        - deployment: Publish
+          environment: azure-lab-app-publish
+          strategy:
+            runOnce:
+              deploy:
+                steps:
+                  - checkout: self
+                    persistCredentials: false
+                  - template: templates/tools.yml
+                  - download: current
+                    artifact: tested-image
+                  - task: AzureCLI@2
+                    inputs:
+                      azureSubscription: platform-app
+                      addSpnToEnvironment: true
+                      scriptType: bash
+                      scriptLocation: inlineScript
+                      inlineScript: |
+                        set -euo pipefail
+                        bash scripts/check-azure-cli.sh
+                        docker load -i "$(Pipeline.Workspace)/tested-image/image.tar"
+                        az acr login --name "$ACR_NAME"
+                        image="$ACR_NAME.azurecr.io/platform-sample"
+                        docker tag "platform-sample:$BUILD_SOURCEVERSION" "$image:$BUILD_SOURCEVERSION"
+                        docker push "$image:$BUILD_SOURCEVERSION"
+                        digest=$(az acr repository show --name "$ACR_NAME" --image "platform-sample:$BUILD_SOURCEVERSION" --query digest -o tsv)
+                        bash scripts/gitops-pr.sh dev "$image" "$digest" "$BUILD_SOURCEVERSION"
+                    env:
+                      ACR_NAME: $(AcrName)
+                      GITOPS_URL: $(GitopsUrl)
+                      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+                  - bash: bash scripts/verify-gitops.sh dev
+                    displayName: Wait for release PR merge, Argo reconciliation and Dev health
+                    env: {KUBE_CONTEXT: '$(KubeContext)', APPROVED_AKS_CONTEXT: '$(KubeContext)', EXPECTED_VERSION: '$(Build.SourceVersion)'}

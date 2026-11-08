@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample-application
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "sample.labels" . | nindent 4 }}
+  {{- if not .Values.image.digest }}
+  annotations:
+    checkov.io/skip1: "CKV_K8S_43=LAB-020 local Kind cache uses an explicitly loaded version tag; Azure releases require a digest"
+    checkov.io/skip2: "CKV_K8S_15=LAB-021 local Kind must use its loaded image without registry access; Azure releases set Always"
+  {{- end }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: {maxSurge: 1, maxUnavailable: 0}
+  selector:
+    matchLabels: {app.kubernetes.io/name: sample-application}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: sample-application
+        {{- if .Values.workloadIdentity.enabled }}
+        azure.workload.identity/use: "true"
+        {{- end }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      serviceAccountName: sample-application
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: application
+          image: {{ include "sample.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          ports: [{name: http, containerPort: 8080}]
+          envFrom: [{configMapRef: {name: sample-application}}]
+          env:
+            - name: POD_NAME
+              valueFrom: {fieldRef: {fieldPath: metadata.name}}
+            {{- if .Values.workloadIdentity.enabled }}
+            - {name: SECRET_FILE, value: /mnt/secrets/platform-test-secret}
+            {{- end }}
+          readinessProbe: {httpGet: {path: /health/ready, port: http}, initialDelaySeconds: 2, periodSeconds: 5}
+          livenessProbe: {httpGet: {path: /health/live, port: http}, initialDelaySeconds: 10, periodSeconds: 10}
+          resources: {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - {name: tmp, mountPath: /tmp}
+            {{- if .Values.workloadIdentity.enabled }}
+            - {name: secrets, mountPath: /mnt/secrets, readOnly: true}
+            {{- end }}
+      volumes:
+        - name: tmp
+          emptyDir: {sizeLimit: 16Mi}
+        {{- if .Values.workloadIdentity.enabled }}
+        - name: secrets
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes: {secretProviderClass: sample-application}
+        {{- end }}

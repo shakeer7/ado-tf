@@ -1,0 +1,18 @@
+enable_azure = false
+deployment_approved = false
+cost_acknowledged = false
+subscription_id = ""
+tenant_id = ""
+resource_group_name = "azplab-platform-rg"
+unique_suffix = "lab123"
+# Central India API snapshot, 2026-11-07: official support, not marked preview.
+# Recheck regional patch availability and eligibility immediately before deployment.
+kubernetes_version = "1.37.1"
+node_vm_size = "Standard_D4ds_v5"
+authorized_ip_ranges = []
+admin_group_object_ids = []
+budget_emails = []
+budget_start_date = "2026-11-01T00:00:00Z"
+enable_acr = false
+enable_monitoring = false
+enable_autoscaling = false

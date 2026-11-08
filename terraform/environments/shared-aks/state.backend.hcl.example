@@ -1,0 +1,6 @@
+resource_group_name = "azplab-state-rg"
+storage_account_name = "replacewithuniquename"
+container_name = "tfstate"
+key = "shared-aks.tfstate"
+use_azuread_auth = true
+# OIDC is supplied through ARM_USE_OIDC and renewable Azure DevOps token requests.

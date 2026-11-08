@@ -1,0 +1,21 @@
+{{- if .Values.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: {name: sample-application, namespace: {{ .Release.Namespace }}}
+spec:
+  scaleTargetRef: {apiVersion: apps/v1, kind: Deployment, name: sample-application}
+  minReplicas: {{ .Values.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource: {name: cpu, target: {type: Utilization, averageUtilization: {{ .Values.autoscaling.targetCPU }} }}
+{{- end }}
+{{- if .Values.pdb.enabled }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata: {name: sample-application, namespace: {{ .Release.Namespace }}}
+spec:
+  minAvailable: {{ .Values.pdb.minAvailable }}
+  selector: {matchLabels: {app.kubernetes.io/name: sample-application}}
+{{- end }}

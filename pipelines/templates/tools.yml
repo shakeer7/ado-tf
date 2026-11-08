@@ -1,0 +1,16 @@
+parameters:
+  - name: scanners
+    type: boolean
+    default: true
+steps:
+  - task: UsePythonVersion@0
+    inputs: {versionSpec: '3.13.18', architecture: x64}
+  - bash: bash scripts/install-tools.sh
+    displayName: Install pinned workspace tools
+  - bash: |
+      set -euo pipefail
+      python -m pip install --require-hashes -r application/requirements-dev.txt
+      python -m venv .tools/checkov-env
+      .tools/checkov-env/bin/pip install -c tools/checkov.constraints.txt checkov==3.4.3
+      echo "##vso[task.prependpath]$PWD/.tools/checkov-env/bin"
+    displayName: Install locked app dependencies and pinned scanner

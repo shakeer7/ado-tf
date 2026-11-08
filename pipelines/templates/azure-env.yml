@@ -1,0 +1,9 @@
+# External IDs and choices are supplied by the protected lab-config variable group.
+variables:
+  - group: lab-config
+  - name: TF_IN_AUTOMATION
+    value: 'true'
+  - name: STATE_CONTAINER
+    value: tfstate
+  - name: STATE_KEY
+    value: shared-aks.tfstate

@@ -1,0 +1,13 @@
+# Copy to terraform.tfvars, fill external account IDs, then review costs.
+enable_azure = false
+deployment_approved = false
+subscription_id = ""
+tenant_id = ""
+operator_object_id = ""
+storage_account_name = "replacewithuniquename"
+allowed_ip_cidrs = []
+# Exact issuer/subject must be copied from manually created WIF service connections.
+# Use keys plan, apply, destroy, app. Never invent an issuer format.
+federations = {}
+budget_start_date = "2026-11-01T00:00:00Z"
+budget_emails = []

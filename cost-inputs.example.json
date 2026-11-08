@@ -1,0 +1,13 @@
+{
+  "mode": "azure", "currency": "USD",
+  "components": {
+    "workers": {"unit_price": null, "monthly_units": 1460, "source": "", "assumption": "Two Linux Standard_D4ds_v5 system nodes, plus separately reviewed third-node surge allowance"},
+    "managed_disks": {"unit_price": 0, "monthly_units": 0, "source": "https://learn.microsoft.com/azure/aks/cluster-configuration", "assumption": "Ephemeral OS disk only, no PVCs; verify SKU capacity"},
+    "public_ip": {"unit_price": null, "monthly_units": 730, "source": "", "assumption": "One managed outbound Standard IPv4 address"},
+    "load_balancer": {"unit_price": null, "monthly_units": 730, "source": "", "assumption": "Standard outbound load balancer base; add data processing separately"},
+    "acr": {"unit_price": null, "monthly_units": 0, "source": "", "assumption": "Optional Basic registry: disabled, set usage if approved"},
+    "key_vault": {"unit_price": null, "monthly_units": 1, "source": "", "assumption": "10000 operations including CSI rotation; confirm meter unit"},
+    "state_storage": {"unit_price": null, "monthly_units": 1, "source": "", "assumption": "1 GB-month incl retained versions; transactions and egress separately"},
+    "monitoring": {"unit_price": null, "monthly_units": 0, "source": "", "assumption": "Disabled; add ingestion, retention and alert rule units if enabled"}
+  }
+}

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sample-application
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "sample.labels" . | nindent 4 }}
+data:
+  APP_ENV: {{ .Values.environment | quote }}
+  APP_VERSION: {{ .Values.version | quote }}
+  DEPLOYED_AT: {{ .Values.deployedAt | quote }}

@@ -1,0 +1,61 @@
+trigger: none
+pr: none
+parameters:
+  - name: pool
+    type: object
+    default: {vmImage: ubuntu-24.04}
+pool: ${{ parameters.pool }}
+resources:
+  pipelines:
+    - pipeline: ci
+      source: platform-terraform-ci
+      trigger: none
+variables:
+  - template: templates/azure-env.yml
+lockBehavior: sequential
+stages:
+  - stage: Apply
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['Build.Reason'], 'Manual'))
+    jobs:
+      - deployment: ApplySavedPlan
+        environment: azure-lab-apply
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                  persistCredentials: false
+                - download: none
+                - template: templates/tools.yml
+                - task: DownloadPipelineArtifact@2
+                  inputs:
+                    buildType: specific
+                    project: $(System.TeamProjectId)
+                    definition: $(TrustedPlanPipelineId)
+                    buildVersionToDownload: specific
+                    pipelineId: $(resources.pipeline.ci.runID)
+                    artifactName: approved-plan
+                    targetPath: $(Pipeline.Workspace)/approved-plan
+                - task: AzureCLI@2
+                  inputs:
+                    azureSubscription: platform-apply
+                    addSpnToEnvironment: true
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      set -euo pipefail
+                      source scripts/oidc-env.sh
+                      python scripts/plan_artifact.py verify "$(Pipeline.Workspace)/approved-plan"
+                      bash scripts/terraform-apply.sh "$(Pipeline.Workspace)/approved-plan"
+                  env:
+                    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+                    SYSTEM_OIDCREQUESTURI: $(System.OidcRequestUri)
+                    SERVICE_CONNECTION_ID: $(ApplyServiceConnectionId)
+                    TRUSTED_PIPELINE_ID: $(TrustedPlanPipelineId)
+                    TRUSTED_RUN_ID: $(resources.pipeline.ci.runID)
+                    STATE_RESOURCE_GROUP: $(StateResourceGroup)
+                    STATE_ACCOUNT: $(StateAccount)
+                    STATE_CONTAINER: $(STATE_CONTAINER)
+                    STATE_KEY: $(STATE_KEY)
+                - publish: reports
+                  artifact: deployment-report
