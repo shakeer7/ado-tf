@@ -1,12 +1,13 @@
 environment: dev
 replicaCount: 1
 image:
-  repository: platform-sample
-  tag: 0.1.0-local
+  # Set these through the reviewed Azure image-release PR before deployment.
+  repository: ""
+  tag: unreleased
   digest: ""
-  pullPolicy: IfNotPresent
-version: 0.1.0-local
-deployedAt: local-demo
+  pullPolicy: Always
+version: unreleased
+deployedAt: ""
 resources:
   requests: {cpu: 50m, memory: 64Mi}
   limits: {cpu: 250m, memory: 128Mi}

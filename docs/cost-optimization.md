@@ -1,7 +1,7 @@
 # Cost model and controls
 
-Local mode creates **zero Azure resources**. Local electricity, bandwidth and any
-commercial Docker license obligations are separate. A personal Free Account can
+Static validation creates **zero Azure resources**. Azure deployment incurs
+charges for enabled resources. A personal Free Account can
 be disabled, out of credits, quota-limited or ineligible for a requested SKU.
 Promotional credits, free monthly allowances and ordinary billable usage are
 different concepts. Never assume a $200 balance or that free eligibility persists.
@@ -16,17 +16,17 @@ Check the full meter snapshot in reports/retail-price-candidates.json locally an
 refresh prices before deployment. Load-balancer/data-processing and storage
 transaction meters still need explicit matching in the reviewed input sheet.
 
-| Component | Default local | Optional Azure exposure | Estimate basis |
-|---|---|---|---|
-| AKS management | 0 | Free tier management only; no SLA | Official AKS Free-tier policy |
-| Worker VMs | None | Two >=4-vCPU Linux D4ds_v5 nodes | 2 × hourly regional rate × running hours, plus surge |
-| Managed disks | None | Ephemeral 64-GB OS disk configured; no app PVC | 0 persistent OS capacity if SKU supports it; separately price any replacement/PVC/snapshot |
-| Public IPv4 | None | One managed outbound Standard IP | Hourly rate × hours retained |
-| Load balancer | None | Standard outbound LB | Base/rules plus data processing meter |
-| ACR | None | Basic only, disabled by default | Registry/day and excess storage/transfer |
-| Key Vault | None | Standard, RBAC and CSI operations | Transactions, rotation frequency, any enabled diagnostics |
-| State storage | None | Standard LRS and retained Blob versions | Capacity, transactions, retained versions, egress |
-| Azure Monitor | None | Disabled by default | Ingestion GB, retention, alert rules and notifications |
+| Component | Azure exposure | Estimate basis |
+|---|---|---|
+| AKS management | Free tier management only; no SLA | Official AKS Free-tier policy |
+| Worker VMs | Two >=4-vCPU Linux D4ds_v5 nodes | 2 x regional hourly rate x running hours, plus surge |
+| Managed disks | Ephemeral 64-GB OS disk configured; no app PVC | 0 persistent OS capacity if SKU supports it; separately price any replacement/PVC/snapshot |
+| Public IPv4 | One managed outbound Standard IP | Hourly rate x hours retained |
+| Load balancer | Standard outbound LB | Base/rules plus data processing meter |
+| ACR | Basic only, disabled by default | Registry/day and excess storage/transfer |
+| Key Vault | Standard, RBAC and CSI operations | Transactions, rotation frequency, any enabled diagnostics |
+| State storage | Standard LRS and retained Blob versions | Capacity, transactions, retained versions, egress |
+| Azure Monitor | Disabled by default | Ingestion GB, retention, alert rules and notifications |
 
 The cost calculator uses 730 hours/month and 730/24 days/month. It reports daily
 averages and monthly totals from explicit reviewed prices and usage assumptions.

@@ -63,17 +63,18 @@ def bash_path():
     windows=Path('C:/Program Files/Git/bin/bash.exe')
     return str(windows) if windows.exists() else shutil.which('bash')
 
-def test_shell_syntax_and_cleanup_guard():
+def test_shell_syntax_and_aks_context_guard():
     bash=bash_path()
     if not bash: pytest.skip('Bash unavailable')
     for script in (ROOT/'scripts').glob('*.sh'):
         result=subprocess.run([bash,'-n',str(script)],capture_output=True,text=True)
         assert result.returncode==0, (script,result.stderr)
-    env=dict(os.environ); env.pop('CONFIRM_LOCAL_DELETE',None)
-    result=subprocess.run([bash,'scripts/cleanup.sh','local'],cwd=ROOT,env=env,capture_output=True,text=True)
-    assert result.returncode==2 and 'Set CONFIRM_LOCAL_DELETE' in result.stdout
-    result=subprocess.run([bash,'scripts/cleanup.sh','azure'],cwd=ROOT,env=env,capture_output=True,text=True)
-    assert result.returncode==2 and 'protected approval' in result.stdout
+    env=dict(os.environ, KUBE_CONTEXT='unapproved-cluster', APPROVED_AKS_CONTEXT='approved-aks')
+    result=subprocess.run([bash,'-c','source scripts/common.sh; require_target'],cwd=ROOT,env=env,capture_output=True,text=True)
+    assert result.returncode==2 and 'Unapproved Kubernetes context' in result.stdout
+    env.pop('APPROVED_AKS_CONTEXT')
+    result=subprocess.run([bash,'-c','source scripts/common.sh; require_target'],cwd=ROOT,env=env,capture_output=True,text=True)
+    assert result.returncode!=0 and 'Set the approved AKS context' in result.stderr
 
 def walk(value):
     if isinstance(value,dict):
@@ -105,6 +106,7 @@ def test_chart_and_namespace_invariants():
 
 def test_cost_requires_verified_rates():
     spec=importlib.util.spec_from_file_location('cost',ROOT/'scripts/estimate-cost.py'); module=importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
-    assert module.calculate({'mode':'local'})['azure_monthly']==0
+    with pytest.raises(ValueError,match='Only Azure'):
+        module.calculate({'mode':'unsupported'})
     with pytest.raises(ValueError,match='Review'):
         module.calculate(json.loads((ROOT/'cost-inputs.example.json').read_text()))

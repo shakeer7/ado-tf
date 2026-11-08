@@ -3,10 +3,9 @@
 ## A natural three-minute explanation
 
 I built this platform to demonstrate how I would manage infrastructure and
-application releases while keeping a personal Azure lab affordable. The default
-mode runs locally with Docker and Kind, so practicing CI, Helm, GitOps and rollback
-does not depend on Azure credits. The optional Azure mode uses one shared AKS
-cluster with Dev and Stage namespaces. That is a lab cost decision; I would not
+application releases on Azure AKS while keeping a personal lab affordable.
+Build and static checks run without cloud credentials; deployment uses approved
+pipelines and one shared AKS cluster with Dev and Stage namespaces. That is a lab cost decision; I would not
 present namespace isolation as equivalent to separate production environments.
 
 Terraform owns Azure infrastructure through reusable modules. A separate
@@ -38,8 +37,7 @@ balancer and IP costs; the Free management tier does not make the cluster free.
 
 Cleanup is a separate manual pipeline: inventory, saved destroy plan, approval,
 apply and orphan verification. It retains state and never offers a production
-target. I also keep an honest validation report: unit/static checks, actual local
-rollouts and real Azure integration are different levels of evidence.
+target. I also keep an honest validation report: unit/static checks and real Azure integration are different levels of evidence.
 
 ## Questions and answers
 

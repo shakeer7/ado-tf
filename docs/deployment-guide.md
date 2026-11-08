@@ -1,36 +1,13 @@
 # Deployment runbook
 
-## Local mode
+## Azure AKS deployment
 
-Use the Windows commands in the main README or the Linux Bash equivalents.
-First verify Docker's Linux engine answers `docker info`. Installing a CLI does
-not mean its engine is running. The scripts do not modify unrelated kubecontexts.
-Build and load the sample image before deployment. Helm installs Dev with one
-replica and Stage with two/PDB. No ingress, database, cloud account or registry
-is required. Metrics-server is local and optional; its kubelet TLS exception is
-Kind-only and is never used on AKS. Optional Prometheus/Grafana are intentionally
-not deployed to save local resources; logs, health endpoints and metrics suffice.
+AKS is the only deployment target. Build and static validation run on workstations
+or CI agents without deploying a Kubernetes cluster. Docker is required for image
+builds. All cluster operations require an explicit approved AKS context.
 
-For GitOps, install pinned Argo CD with ClusterIP, generate the independent local
-Git repository and read-only Git daemon, then apply the generated AppProject and
-Applications. `host.docker.internal:9418` must be reachable from pods on Docker
-Desktop. On Linux set LOCAL_GITOPS_URL to a host address reachable through Kind's
-Docker bridge. The daemon exports only sample source, with receive-pack disabled;
-do not place secrets in it. No remote repository is created or pushed by local
-setup. Existing Helm application objects are adopted by Argo; stop direct Helm
-upgrades at that point. Keep platform namespaces/quotas under platform ownership.
-
-Inspect `kubectl -n argocd get applications` and Application conditions before
-claiming GitOps worked. For private Azure Repos, an Argo repository credential
-must be configured through a separately approved secure workflow. Azure DevOps
-ARM WIF is not automatically a Git credential for Argo CD. Do not commit PATs.
-Prefer a supported read-only repository integration/credential with rotation.
-
-## Azure mode
-
-Azure mode is currently blocked by the discovered disabled subscription and
-exhausted regional quota. The following is a future approved procedure, not an
-instruction to deploy immediately.
+The 7 November 2026 discovery found a disabled subscription and insufficient
+quota. Recheck these conditions before using this approval-based procedure.
 
 1. Confirm the subscription is Enabled through ARM, review the actual billing
    offer/credit expiry in Azure Portal, and decide an affordable maximum exposure.
@@ -39,7 +16,7 @@ instruction to deploy immediately.
    third 4-vCPU upgrade surge node (more if enabling autoscaling/rotation). Check the exact
    Standard_D4ds_v5 candidate's restrictions, >=4 GiB RAM, ephemeral OS disk support,
    temp/cache capacity >=64 GiB and current AKS system-pool requirements. Do not
-   substitute B-series. A missing quota/capacity/offer permission means stay local.
+   substitute B-series. A missing quota/capacity/offer permission means keep deployment disabled.
 3. Use `az aks get-versions -l REGION -o json`, inspect patchVersions and isPreview,
    and pin one exact GA regional patch. Check upgrade support and kubectl skew.
 4. Run the official retail-price discovery script, review Linux consumption rates,
@@ -64,13 +41,22 @@ instruction to deploy immediately.
    Never retrieve an admin credential; local AKS accounts are disabled.
 9. Apply only platform namespace/quota/network-policy/RBAC manifests using the
    approved AKS context. Give observer Roles to explicitly approved principals.
+   Export `gitops-repo` with `scripts/export-gitops.py` into a separate checkout
+   and publish it to the approved GitOps repository. Protect main and configure
+   Argo with a read-only repository credential through a secure workflow; ARM
+   WIF is not a Git credential. Generate manifests using
+   `python scripts/configure-argocd.py --repo-url YOUR_GITOPS_URL`.
    Install Argo using **one** owner: install-argocd.sh OR the optional isolated
    cluster-services Terraform root. Do not run both. Use a distinct state key if
    that root has a remote backend.
-10. If ACR is approved, set enable_acr and the app pipeline principal ID, review a
-    new Terraform plan, and approve the change. Application CI publishes scanned
+10. For the integrated application delivery flow, approve ACR, set enable_acr and
+    the app pipeline principal ID, review a new Terraform plan, and approve it. Application CI publishes scanned
     images and proposes immutable GitOps releases. Keep app public access off;
-    demonstrate with port-forward.
+    demonstrate with port-forward using the explicit AKS context.
+    The seed has empty image settings: merge the first Dev digest release before
+    applying `out/argocd/project.yaml` and `out/argocd/sample-dev.yaml`. Add the
+    Stage Application after the first approved Stage promotion PR is merged.
+    Never deploy `tests/fixtures/image.yaml`; it is for static checks only.
 11. If Key Vault testing is approved, create a harmless test secret securely outside
     Terraform, set environment-specific workloadIdentity client/tenant/vault IDs
     and secretName in GitOps values, and enable CSI. Do not put its value in logs,

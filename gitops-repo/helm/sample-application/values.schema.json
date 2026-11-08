@@ -1,17 +1,90 @@
 {
-  "$schema":"http://json-schema.org/draft-07/schema#","type":"object",
-  "required":["environment","image","resources"],
-  "properties":{
-    "environment":{"enum":["dev","stage"]},
-    "replicaCount":{"type":"integer","minimum":1},
-    "image":{"type":"object","required":["repository","tag","digest"],"properties":{
-      "repository":{"type":"string","minLength":1},
-      "tag":{"type":"string","minLength":1,"not":{"enum":["latest"]}},
-      "digest":{"type":"string","pattern":"^(sha256:[a-f0-9]{64})?$"},
-      "pullPolicy":{"enum":["IfNotPresent","Always","Never"]}}},
-    "workloadIdentity":{"type":"object","properties":{"enabled":{"type":"boolean"}},
-      "if":{"properties":{"enabled":{"const":true}}},
-      "then":{"required":["clientId","tenantId","vaultName"],"properties":{
-        "clientId":{"type":"string","minLength":36},"tenantId":{"type":"string","minLength":36},"vaultName":{"type":"string","minLength":3}}}}
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "environment",
+    "image",
+    "resources"
+  ],
+  "properties": {
+    "environment": {
+      "enum": [
+        "dev",
+        "stage"
+      ]
+    },
+    "replicaCount": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "image": {
+      "type": "object",
+      "required": [
+        "repository",
+        "tag",
+        "digest",
+        "pullPolicy"
+      ],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tag": {
+          "type": "string",
+          "minLength": 1,
+          "not": {
+            "enum": [
+              "latest"
+            ]
+          }
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "pullPolicy": {
+          "enum": [
+            "Always"
+          ]
+        }
+      }
+    },
+    "workloadIdentity": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "if": {
+        "properties": {
+          "enabled": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "clientId",
+          "tenantId",
+          "vaultName"
+        ],
+        "properties": {
+          "clientId": {
+            "type": "string",
+            "minLength": 36
+          },
+          "tenantId": {
+            "type": "string",
+            "minLength": 36
+          },
+          "vaultName": {
+            "type": "string",
+            "minLength": 3
+          }
+        }
+      }
+    }
   }
 }

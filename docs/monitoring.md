@@ -1,9 +1,9 @@
 # Monitoring
 
-Locally install pinned metrics-server only on Kind. `kubectl top pods -A`,
-`kubectl top nodes`, JSON stdout logs and `/health/live`, `/health/ready` and
-`/api/info` provide basic visibility. Prometheus/Grafana are optional future
-extensions and are not depicted as deployed components.
+Use the approved AKS context with `kubectl top pods -A`, `kubectl top nodes`
+and application JSON stdout logs. The endpoints `/health/live`, `/health/ready`
+and `/api/info` provide application status. Verify the AKS metrics API before
+enabling HPA. Prometheus/Grafana are not deployed by this project.
 
 Azure Log Analytics/Container Insights defaults off. If approved, the workspace
 uses 30-day retention and a 0.1-GB daily ingestion quota. The quota is not an

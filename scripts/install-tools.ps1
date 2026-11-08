@@ -28,11 +28,6 @@ Invoke-WebRequest "https://dl.k8s.io/release/v$($v.kubectl)/bin/windows/amd64/ku
 $kubectlSum = (Invoke-WebRequest "https://dl.k8s.io/release/v$($v.kubectl)/bin/windows/amd64/kubectl.exe.sha256").Content
 if ($kubectlSum -is [byte[]]) { $kubectlSum = [System.Text.Encoding]::UTF8.GetString($kubectlSum) }
 if ((Get-FileHash "$toolsDir/kubectl.exe").Hash.ToLower() -ne $kubectlSum.Trim()) { throw 'Kubectl checksum mismatch' }
-Invoke-WebRequest "https://kind.sigs.k8s.io/dl/v$($v.kind)/kind-windows-amd64" -OutFile "$toolsDir/kind.exe"
-$kindSum = (Invoke-WebRequest "https://kind.sigs.k8s.io/dl/v$($v.kind)/kind-windows-amd64.sha256sum").Content
-if ($kindSum -is [byte[]]) { $kindSum = [System.Text.Encoding]::UTF8.GetString($kindSum) }
-$expected = ($kindSum.Trim() -split '\s+')[0]
-if ((Get-FileHash "$toolsDir/kind.exe").Hash.ToLower() -ne $expected.ToLower()) { throw 'Kind checksum mismatch' }
 & $Python -m pip install --target "$toolsDir/pydeps" "pip-tools==$($v.pip_tools)" "pytest==$($v.pytest)" "httpx==$($v.httpx)" "PyYAML==$($v.pyyaml)" "fastapi==$($v.fastapi)" "uvicorn==$($v.uvicorn)"
 if ($LASTEXITCODE) { throw 'App dependencies failed' }
 & $Python -m pip install --target "$toolsDir/scan-deps" -c "$root/tools/checkov.constraints.txt" "checkov==$($v.checkov)"

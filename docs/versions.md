@@ -12,12 +12,9 @@ machine's installed versions were recorded separately in discovery.md.
 | kubernetes provider | `3.5.0` |
 | helm provider | `3.3.0` |
 | helm | `4.3.1` |
-| kind | `0.33.0` |
-| kind node | `kindest/node:v1.37.0@sha256:a1ed56cfb0e7b93589bdf97c8cd566405a265939e3620fc4f5de89adff580ae5` |
 | kubectl | `1.37.2` |
 | argocd | `3.6.1` |
 | argocd chart | `10.14.0` |
-| metrics server | `0.9.1` |
 | tflint | `0.65.0` |
 | trivy | `0.76.2` |
 | kubeconform | `0.8.0` |
@@ -50,11 +47,10 @@ avoiding same-apply AKS endpoint initialization. AzureAD is confined to the
 optional administrator group in bootstrap; recurring infrastructure runs need
 no Microsoft Graph application permissions.
 
-Kind 0.33.0 uses its release-published Kubernetes 1.37.0 node digest. The application
-uses GA APIs supported by Kubernetes 1.34–1.37. AKS versions are regional and
+The application uses GA APIs supported by Kubernetes 1.34â€“1.37. AKS versions are regional and
 subscription dependent: select and pin an exact GA patch in the environment tfvars
 and protected pipeline variable group after preflight. No global AKS patch is
-invented. The kubectl client should match that minor (supported skew is ±1).
+invented. The kubectl client should match that minor (supported skew is Â±1).
 Argo chart 10.14.0 is pinned and its application image is explicitly 3.6.1.
 The Helm chart contains no floating chart dependencies. Checkov runs in a separate
 environment because its packaging dependency conflicts with current pytest. The resolved scanner dependencies are pinned in tools/checkov.constraints.txt.
@@ -67,10 +63,8 @@ environment because its packaging dependency conflicts with current pytest. The 
 - [Kubernetes provider releases](https://github.com/hashicorp/terraform-provider-kubernetes/releases)
 - [Helm provider releases](https://github.com/hashicorp/terraform-provider-helm/releases)
 - [Helm releases](https://github.com/helm/helm/releases)
-- [Kind release and node digests](https://github.com/kubernetes-sigs/kind/releases/tag/v0.33.0)
 - [Argo CD releases](https://github.com/argoproj/argo-cd/releases/tag/v3.6.1)
 - [Argo Helm releases](https://github.com/argoproj/argo-helm/releases/tag/argo-cd-10.14.0)
-- [metrics-server releases](https://github.com/kubernetes-sigs/metrics-server/releases)
 - [TFLint releases](https://github.com/terraform-linters/tflint/releases)
 - [Trivy releases](https://github.com/aquasecurity/trivy/releases)
 - [Kubeconform releases](https://github.com/yannh/kubeconform/releases)

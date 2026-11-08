@@ -24,8 +24,9 @@ deployment. These are explicit architecture tradeoffs, not production approvals.
 | LAB-017 | CKV_AZURE_116 / AKS | Pod Security restricted admission, quotas and scanners enforce local controls; Azure Policy add-on omitted. | Azure Policy with tested admission policies |
 | LAB-018 | CKV_AZURE_117 / AKS | Configured ephemeral OS disks have no managed-disk encryption-set resource. | Review CMK requirements per disk/data type |
 | LAB-019 | CKV2_AZURE_32 / Key Vault | Deny firewall and AKS service-endpoint subnet avoid private endpoint cost. | Private endpoint and private DNS |
-| LAB-020 | CKV_K8S_43 / local Deployment only | Kind requires an explicitly loaded version tag. Annotation is absent for digest-based cloud releases. | Registry digest enforced by release script |
-| LAB-021 | CKV_K8S_15 / local Deployment only | IfNotPresent uses Kind's loaded cache without registry access. Cloud release updater sets Always. | Always policy with pinned registry digest |
 
 Other scanner findings must remain visible until resolved or independently
 documented here with resource-scoped evidence and expiry.
+
+LAB-020 and LAB-021 were retired when cached-image deployment support was removed.
+All application releases now require an immutable registry digest and Always pull policy.

@@ -1,8 +1,8 @@
 # Architecture and ownership
 
-Mode A is the default. No Azure login is needed for application tests, rendering,
-scanner checks or the local Kind workflow. Mode B requires a reviewed cost sheet,
-an approved bootstrap and protected Azure DevOps resources.
+Azure AKS is the only deployment target. Build, rendering and static checks need
+no Azure login. Deployment requires a reviewed cost sheet, an approved bootstrap
+and protected Azure DevOps resources. Azure resource creation defaults off.
 
 | Owner | Resources |
 |---|---|
@@ -172,7 +172,7 @@ sequenceDiagram
 ```mermaid
 flowchart LR
   P[Application JSON stdout] --> KL[kubectl logs]
-  N[Node metrics] --> MS[metrics-server local optional]
+  N[Node metrics] --> MS[AKS metrics API]
   MS --> TOP[kubectl top and optional HPA]
   P -. paid optional .-> LA[Container Insights and Log Analytics]
   LA -. optional .-> AL[Selected Azure metric alert]
@@ -191,14 +191,12 @@ flowchart LR
   OR --> B[Backend and platform RG retained by bootstrap]
 ```
 
-## Modes
+## Deployment gates
 ```mermaid
 flowchart TD
-  START[Default: no Azure resources] --> LOCAL[Docker and Kind]
-  LOCAL --> H[Helm Dev and Stage]
-  H --> G[Optional Argo with reachable Git repository]
-  START -. explicit approval .-> PRE[Azure eligibility, quota and price review]
-  PRE --> APPROVED[Approved bootstrap and pipeline setup]
-  APPROVED --> AZ[One AKS shared lab]
-  PRE -->|unsupported or unaffordable| LOCAL
+  START[Azure resource creation disabled] --> CHECK[Build and credential-free validation]
+  CHECK --> PRE[Azure eligibility, quota and price review]
+  PRE --> APPROVED[Approved bootstrap and protected pipeline setup]
+  APPROVED --> AZ[One shared AKS cluster]
+  PRE -->|unsupported or unaffordable| WAIT[Keep deployment disabled]
 ```

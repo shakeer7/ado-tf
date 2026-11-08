@@ -4,11 +4,6 @@ metadata:
   name: sample-application
   namespace: {{ .Release.Namespace }}
   labels: {{- include "sample.labels" . | nindent 4 }}
-  {{- if not .Values.image.digest }}
-  annotations:
-    checkov.io/skip1: "CKV_K8S_43=LAB-020 local Kind cache uses an explicitly loaded version tag; Azure releases require a digest"
-    checkov.io/skip2: "CKV_K8S_15=LAB-021 local Kind must use its loaded image without registry access; Azure releases set Always"
-  {{- end }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}

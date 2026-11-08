@@ -5,7 +5,8 @@ from pathlib import Path
 
 COMPONENTS=('workers','managed_disks','public_ip','load_balancer','acr','key_vault','state_storage','monitoring')
 def calculate(inputs):
-    if inputs['mode']=='local': return {'mode':'local','azure_daily':0,'azure_monthly':0}
+    if inputs.get('mode') != 'azure':
+        raise ValueError('Only Azure cost inputs are supported')
     lines=[]
     for name in COMPONENTS:
         item=inputs['components'][name]
@@ -38,13 +39,13 @@ def discover(region,sku):
     return result
 
 def main():
-    p=argparse.ArgumentParser(); p.add_argument('--local',action='store_true'); p.add_argument('--input',type=Path)
-    p.add_argument('--discover',action='store_true'); p.add_argument('--region',default='centralindia'); p.add_argument('--sku',default='Standard_D4ds_v5')
+    p=argparse.ArgumentParser()
+    mode=p.add_mutually_exclusive_group(required=True)
+    mode.add_argument('--input',type=Path); mode.add_argument('--discover',action='store_true')
+    p.add_argument('--region',default='centralindia'); p.add_argument('--sku',default='Standard_D4ds_v5')
     p.add_argument('--output',default='reports/cost-estimate.json',type=Path); a=p.parse_args()
     if a.discover: result=discover(a.region,a.sku)
-    elif a.local: result=calculate({'mode':'local'})
     elif a.input: result=calculate(json.loads(a.input.read_text()))
-    else: p.error('Choose --local, --discover or --input with reviewed rates')
     a.output.parent.mkdir(parents=True,exist_ok=True); a.output.write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps(result,indent=2) if not a.discover else 'Official retail candidates saved to '+str(a.output))
 if __name__=='__main__': main()

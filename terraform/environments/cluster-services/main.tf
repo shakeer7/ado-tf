@@ -10,8 +10,11 @@ variable "kubeconfig_path" {
 }
 variable "kube_context" {
   type        = string
-  default     = "kind-platform-lab"
-  description = "Exact intended context; use kubelogin azurecli authentication for AKS"
+  description = "Required approved AKS context; use kubelogin azurecli authentication"
+  validation {
+    condition     = length(trimspace(var.kube_context)) > 0
+    error_message = "Set the approved AKS context explicitly."
+  }
 }
 provider "kubernetes" {
   config_path    = var.kubeconfig_path

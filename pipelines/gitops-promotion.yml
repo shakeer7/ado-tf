@@ -3,7 +3,7 @@ pr: none
 parameters:
   - name: pool
     type: object
-    default: {name: platform-local}
+    default: {name: platform-aks}
 pool: ${{ parameters.pool }}
 variables:
   - template: templates/azure-env.yml

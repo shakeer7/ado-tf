@@ -1,0 +1,6 @@
+# Synthetic image used only for static rendering; never deploy this fixture.
+image:
+  repository: validation.invalid/platform-sample
+  tag: validation
+  digest: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  pullPolicy: Always

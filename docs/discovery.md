@@ -1,4 +1,7 @@
-# Discovery — 7 November 2026, Asia/Calcutta
+# Discovery â€” 7 November 2026, Asia/Calcutta
+
+This is a historical setup record. The project now supports Azure AKS deployment
+only; previously downloaded cluster tooling is not a supported deployment path.
 
 The workspace began empty. Tools found: Terraform 1.15.0, Helm 4.2.2, kubectl
 1.34.1, Azure CLI 2.85.0, Git 2.53.0 and Docker Desktop binaries. Kind, TFLint,

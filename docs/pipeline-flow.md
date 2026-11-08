@@ -29,7 +29,7 @@ the server's complete YAML/task compilation.
    Set job authorization scope to the project; limit repository access. Grant the
    project Build Service read plus create-branch/PR permissions on platform-gitops,
    deny policy bypass/direct main writes and require reviewer/build checks.
-6. Provision a supported Linux self-hosted pool `platform-local` if hosted minutes
+6. Provision a supported Linux self-hosted pool `platform-aks` if hosted minutes
    or parallel jobs are unavailable. Register the agent manually using a scoped,
    short-lived registration credential, then remove that credential. Do not store
    it in Git. Use a dedicated user and clean workspaces, never run untrusted PR
@@ -37,7 +37,7 @@ the server's complete YAML/task compilation.
    Protect deployment agent pools with main-branch checks and authorize only the
    intended trusted pipeline definitions; PR jobs use a separate unprivileged pool.
 
-All entry pipelines accept a pool object. Use `{name: platform-local}` for an
+All entry pipelines accept a pool object. Use `{name: platform-aks}` for an
 existing local agent, or the default hosted ubuntu-24.04 image for credential-free
 checks. Application publish/rollout and promotion require a dedicated agent with
 an explicitly configured observer/exec Kubernetes context and network route to

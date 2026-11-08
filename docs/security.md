@@ -43,8 +43,8 @@ and audit that trust boundary. YAML alone cannot create or prove these controls.
 
 Entra authentication and Azure RBAC are enabled; AKS local admin accounts are off.
 The API allows only explicit public CIDRs. Prefer private APIs with private agents
-in production. Azure CNI Overlay and Cilium enforce network policies; Kind's pinned
-release provides local policy support. Test isolation rather than assuming it.
+in production. Azure CNI Overlay and Cilium enforce network policies on AKS.
+Test isolation rather than assuming it.
 Dev/Stage have restricted Pod Security, quotas (including zero LoadBalancer/PVC
 allowance), limits, default-deny policies, scoped observer roles and distinct
 workload identities. Bind observer Roles only to approved user/group subjects;
@@ -60,8 +60,8 @@ secure portal/session, updates secretName in the environment values and enables
 the CSI integration with the corresponding client/tenant/vault IDs. The pod mounts
 a read-only file and readiness checks availability without returning content.
 No Kubernetes Secret synchronization is enabled. Rotation is eventual; a missing
-value blocks readiness, not liveness. Local mode simulates the mount in unit tests;
-it cannot demonstrate a real Entra exchange or Key Vault firewall.
+value blocks readiness, not liveness. Unit tests simulate the mounted file;
+they cannot demonstrate a real Entra exchange or Key Vault firewall.
 
 ## Gates and exceptions
 

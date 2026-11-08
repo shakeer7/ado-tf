@@ -13,8 +13,8 @@ terraform -chdir=terraform/modules/acr test
 tflint --init
 tflint --recursive --config="$REPO_ROOT/.tflint.hcl"
 for env in dev stage; do
-  helm lint helm/sample-application -f "helm/sample-application/values-$env.yaml" --strict
-  helm template sample-application helm/sample-application --namespace "$env" -f "helm/sample-application/values-$env.yaml" > "out/$env.yaml"
+  helm lint helm/sample-application -f "helm/sample-application/values-$env.yaml" -f tests/fixtures/image.yaml --strict
+  helm template sample-application helm/sample-application --namespace "$env" -f "helm/sample-application/values-$env.yaml" -f tests/fixtures/image.yaml > "out/$env.yaml"
   kubeconform -strict -summary -kubernetes-version 1.37.0 "out/$env.yaml"
 done
 for folder in bootstrap terraform/modules out kubernetes; do

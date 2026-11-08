@@ -34,7 +34,7 @@ Run: 2026-11-07T07:09:42.5959196+05:30. All cloud checks below are static or use
 
 No Azure resource-changing operation was executed. Azure DevOps server compilation, protected checks, WIF exchange, Key Vault CSI access and Azure deployment remain unverified.
 
-Docker engine health checks timed out after Docker Desktop was launched; no targetable Docker window was available through Computer Use. No image build, Kind cluster creation, rollout, Argo reconciliation or live cluster dry-run was claimed. Follow the local runbook after the engine is healthy.
+The original validation did not establish image builds, AKS rollout or Argo reconciliation. AKS is now the only supported deployment target. Follow the Azure runbook for integration validation. The results above predate removal of the alternate deployment path.
 
 A clean scanner result includes documented, resource-scoped lab exceptions. See security-exceptions.md. Logs and JSON scanner reports are retained locally under reports/ and excluded from Git.
 
@@ -45,3 +45,17 @@ A clean scanner result includes documented, resource-scoped lab exceptions. See 
 - Bootstrap provider validation passed after isolating pipeline identities and bootstrap state, adding the deletion lock and constraining firewall inputs. Its Checkov scan passed 6 checks with 4 documented resource-scoped exceptions.
 - PowerShell and Python syntax checks and pipeline/generated Argo definition parsing passed.
 - Argo CD chart 10.14.0 rendered successfully with the configured 3.6.1 application image. Installation/reconciliation remains unverified without a healthy Docker engine.
+
+## Azure-only follow-up - 8 November 2026
+
+After removal of the alternate deployment path:
+
+- 29 application/repository tests passed, including registry digest requirements,
+  rejection of cached-image pull policies, matching chart copies and explicit
+  approved AKS context guards. One upstream Starlette/httpx warning remains.
+- Terraform recursive formatting and cluster-services provider validation passed.
+- Stage Helm lint with the static image fixture passed. Tests also rendered the
+  optional workload identity, autoscaling and disruption budget resources.
+- PowerShell parsing and Bash syntax checks passed; pipeline YAML parsing passed.
+- No AKS deployment, registry push, Argo reconciliation or live Azure operation
+  was performed. The earlier scanner results above were not rerun in this change.

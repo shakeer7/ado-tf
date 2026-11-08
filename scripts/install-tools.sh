@@ -15,7 +15,7 @@ if len(lines) != 1 or hashlib.sha256(archive.read_bytes()).hexdigest() != lines[
     raise SystemExit('Checksum mismatch or missing entry: '+archive.name)
 PY
 }
-tf=$(v terraform); helm=$(v helm); lint=$(v tflint); trivy=$(v trivy); kind=$(v kind); kc=$(v kubeconform)
+tf=$(v terraform); helm=$(v helm); lint=$(v tflint); trivy=$(v trivy); kc=$(v kubeconform)
 if [[ ! -x .tools/terraform ]]; then
   a="terraform_${tf}_linux_amd64.zip"; base="https://releases.hashicorp.com/terraform/$tf"
   fetch "$base/$a" ".tools/$a"; fetch "$base/terraform_${tf}_SHA256SUMS" .tools/tf.sums
@@ -40,11 +40,6 @@ if [[ ! -x .tools/kubeconform ]]; then
   a=kubeconform-linux-amd64.tar.gz; base="https://github.com/yannh/kubeconform/releases/download/v$kc"
   fetch "$base/$a" ".tools/$a"; fetch "$base/CHECKSUMS" .tools/kubeconform.sums
   verify ".tools/$a" .tools/kubeconform.sums; tar -xzf ".tools/$a" -C .tools
-fi
-if [[ ! -x .tools/kind ]]; then
-  fetch "https://kind.sigs.k8s.io/dl/v$kind/kind-linux-amd64" .tools/kind-linux-amd64
-  fetch "https://kind.sigs.k8s.io/dl/v$kind/kind-linux-amd64.sha256sum" .tools/kind.sums
-  verify .tools/kind-linux-amd64 .tools/kind.sums; mv .tools/kind-linux-amd64 .tools/kind; chmod +x .tools/kind
 fi
 echo "##vso[task.prependpath]$PWD/.tools"
 if [[ ! -x .tools/kubectl ]]; then
