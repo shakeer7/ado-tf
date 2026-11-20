@@ -1,5 +1,5 @@
 # Azure Platform DevOps Lab
-[![Architecture diagram of shakeer7/campusai](https://gitdiagram.com/shakeer7/campusai/diagram.png)](https://gitdiagram.com/shakeer7/campusai?utm_source=readme&utm_medium=picture)
+
 
 An Azure AKS platform engineering project using Terraform, Azure DevOps,
 federated identity, Key Vault CSI, Docker, Helm and Argo CD. AKS is the only
